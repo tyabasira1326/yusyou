@@ -16,16 +16,16 @@
   h1 { text-align: center; font-size: 14px; color: #a0c4ff; letter-spacing: 4px; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid #2a2a4e; }
 
   .row { display: flex; align-items: center; gap: 3px; margin-bottom: 4px; }
-  .row-label { font-size: 11px; color: #111; width: 30px; flex-shrink: 0; text-align: right; padding-right: 3px; }
+  .row-label { font-size: 11px; color: #ffffff; width: 30px; flex-shrink: 0; text-align: right; padding-right: 3px; }
 
   /* 順位点バー */
   .rankpts-bar { display: flex; align-items: center; gap: 3px; margin-bottom: 4px; }
   .rpt-item { display: flex; align-items: center; gap: 2px; flex: 1; }
-  .rpt-num { font-size: 10px; color: #e8e8e8; flex-shrink: 0; }
+  .rpt-num { font-size: 10px; color: #ffffff; flex-shrink: 0; }
   .rpt-val { flex: 1; height: 38px; background: #0d0d1a; border: 1px solid #333; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: bold; color: #f39c12; cursor: pointer; }
   .rpt-val.neg { color: #e74c3c; }
   .rpt-hara { display: flex; align-items: center; gap: 2px; flex-shrink: 0; }
-  .rpt-hara-label { font-size: 10px; color: #e8e8e8; }
+  .rpt-hara-label { font-size: 10px; color: #ffffff; }
   .rpt-hara-val { width: 38px; height: 38px; background: #0d0d1a; border: 1px solid #333; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: bold; color: #f39c12; cursor: pointer; }
   .selected-input { border-color: #6abf69 !important; background: #1a3d1a !important; color: #aeffae !important; }
 
@@ -70,14 +70,14 @@
   .btn-num:active { background: #16a085; }
 
   .divider { border: none; border-top: 2px solid #3a3a5e; margin: 8px 0; }
-  .shisan-label { font-size: 11px; color: #111; }
+  .shisan-label { font-size: 11px; color: #ffffff; }
 
   /* 結果エリア */
   .result-header { display: flex; align-items: center; gap: 3px; margin-bottom: 3px; padding-left: 36px; }
   .rh-cell { flex: 1; text-align: center; font-size: 10px; color: #e8e8e8; }
   .rh-cell.w2 { flex: 2; }
   .result-row { display: flex; align-items: center; gap: 3px; margin-bottom: 4px; }
-  .res-name { width: 33px; height: 40px; border: 1px solid #555; background: #2a2a3e; color: #e0e0e0; font-size: 13px; font-weight: bold; border-radius: 6px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; cursor: pointer; -webkit-user-select: none; user-select: none; overflow: hidden; white-space: nowrap; }
+  .res-name { width: 33px; height: 40px; border: 1px solid #555; background: #2a2a3e; color: #e0e0e0; font-size: 13px; font-weight: bold; border-radius: 6px; flex-shrink: 0; display: flex; align-items: center; justify-content: flex-start; padding-left: 4px; cursor: pointer; -webkit-user-select: none; user-select: none; overflow: hidden; white-space: nowrap; }
   .res-name.shi-active { background: #2a2a3e; border-color: #555; color: #e0e0e0; }
   .res-box { flex: 1; height: 40px; background: #0d0d1a; border: 1px solid #2a3a2a; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: bold; color: #2ecc71; min-width: 0; }
   .res-box.yo { color: #e74c3c; }
@@ -173,7 +173,7 @@
     <div class="disp-box" id="rank-C">—</div>
     <div class="disp-box" id="rank-D">—</div>
     <div class="kyoku-wrap">
-      <span style="font-size:11px;color:#111;">供</span>
+      <span style="font-size:11px;color:#ffffff;">供</span>
       <div class="kyoku-display selected-kyoku" id="disp-kyoku" onclick="selectInput('kyoku')">＿</div>
     </div>
   </div>
@@ -186,7 +186,7 @@
     <div class="disp-box" id="pdiff-C">—</div>
     <div class="disp-box" id="pdiff-D">—</div>
     <div class="kyoku-wrap">
-      <span style="font-size:11px;color:#111;">積</span>
+      <span style="font-size:11px;color:#ffffff;">積</span>
       <div class="kyoku-display" id="disp-zumi" onclick="selectInput('zumi')">＿</div>
     </div>
   </div>
