@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>麻雀　優勝条件</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #1a1a2e; color: #e0e0e0;
+    font-family: 'Hiragino Kaku Gothic Pro', 'Yu Gothic', sans-serif;
+    min-height: 100vh; display: flex; justify-content: center;
+    padding: 12px 8px;
+  }
+  .app { width: 100%; max-width: 480px; }
+  h1 { text-align: center; font-size: 14px; color: #a0c4ff; letter-spacing: 4px; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid #2a2a4e; }
+
+  .row { display: flex; align-items: center; gap: 3px; margin-bottom: 4px; }
+  .row-label { font-size: 11px; color: #111; width: 30px; flex-shrink: 0; text-align: right; padding-right: 3px; }
+
+  /* 順位点バー */
+  .rankpts-bar { display: flex; align-items: center; gap: 3px; margin-bottom: 4px; }
+  .rpt-item { display: flex; align-items: center; gap: 2px; flex: 1; }
+  .rpt-num { font-size: 10px; color: #e8e8e8; flex-shrink: 0; }
+  .rpt-val { flex: 1; height: 38px; background: #0d0d1a; border: 1px solid #333; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: bold; color: #f39c12; cursor: pointer; }
+  .rpt-val.neg { color: #e74c3c; }
+  .rpt-hara { display: flex; align-items: center; gap: 2px; flex-shrink: 0; }
+  .rpt-hara-label { font-size: 10px; color: #e8e8e8; }
+  .rpt-hara-val { width: 38px; height: 38px; background: #0d0d1a; border: 1px solid #333; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: bold; color: #f39c12; cursor: pointer; }
+  .selected-input { border-color: #6abf69 !important; background: #1a3d1a !important; color: #aeffae !important; }
+
+  /* 名前ボタン */
+  .btn-player { flex: 1; height: 38px; border: 1px solid #555; background: #2a2a3e; color: #e0e0e0; font-size: 13px; font-weight: bold; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; -webkit-user-select: none; user-select: none; overflow: hidden; white-space: nowrap; }
+
+  /* C（クリア）ボタン */
+  .btn-clear-sel { width: 40px; height: 38px; border: 1px solid #7d4400; background: #3a2000; color: #f39c12; font-size: 16px; font-weight: bold; border-radius: 6px; cursor: pointer; flex-shrink: 0; }
+
+  /* マイナス */
+  .btn-minus { width: 20px; height: 38px; border: 1px solid #555; background: #2a2a3e; color: #f39c12; font-size: 16px; font-weight: bold; border-radius: 6px; cursor: pointer; flex-shrink: 0; }
+  .btn-minus.active { background: #7d4e00; border-color: #f39c12; }
+
+  /* スコア入力枠 */
+  .score-display { flex: 1; height: 38px; background: #0d0d1a; border: 1px solid #333; border-radius: 6px; display: flex; align-items: center; justify-content: flex-end; padding-right: 5px; font-size: 16px; font-weight: bold; color: #7fdbff; min-width: 0; cursor: pointer; }
+
+  /* 計ボックス */
+  .sum-box { width: 44px; height: 38px; background: #0d0d1a; border: 1px solid #444; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; color: #f39c12; flex-shrink: 0; }
+  .sum-box.error { color: #e74c3c; border-color: #e74c3c; }
+
+  /* 表示専用枠 */
+  .disp-box { flex: 1; height: 38px; background: #0d0d1a; border: 1px solid #2a3a2a; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: bold; color: #e0e0e0; min-width: 0; }
+  .disp-box.top { color: #f39c12; border-color: #5a4a00; }
+
+  /* 供・積 */
+  .kyoku-wrap { display: flex; align-items: center; gap: 3px; flex-shrink: 0; }
+  .btn-kyoku { height: 38px; padding: 0 8px; border: 1px solid #555; background: #2a2a3e; color: #e0e0e0; font-size: 15px; font-weight: bold; border-radius: 6px; cursor: pointer; flex-shrink: 0; }
+  .btn-kyoku.selected { background: #8e44ad; border-color: #9b59b6; color: #fff; }
+  .kyoku-display { width: 32px; height: 38px; background: #0d0d1a; border: 1px solid #333; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: bold; color: #f39c12; flex-shrink: 0; }
+
+  /* 親子 */
+  .btn-oya { flex: 1; height: 38px; border: 1px solid #555; background: #2a2a3e; color: #888; font-size: 17px; border-radius: 6px; cursor: pointer; }
+  .btn-oya.is-oya { background: #c0392b; border-color: #e74c3c; color: #fff; font-weight: bold; }
+  .btn-oya.is-ko  { background: #1a5276; border-color: #2980b9; color: #adf; }
+
+  /* AC */
+  .btn-ac { width: 44px; height: 38px; border: 1px solid #7d1a1a; background: #3a1a1a; color: #e74c3c; font-size: 14px; font-weight: bold; border-radius: 6px; cursor: pointer; flex-shrink: 0; }
+
+  /* 数字パッド */
+  .numpad { display: grid; grid-template-columns: repeat(5,1fr); gap: 4px; margin: 6px 0; }
+  .btn-num { height: 38px; border: 1px solid #444; background: #252540; color: #e0e0e0; font-size: 24px; font-weight: bold; border-radius: 8px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  .btn-num:active { background: #16a085; }
+
+  .divider { border: none; border-top: 2px solid #3a3a5e; margin: 8px 0; }
+  .shisan-label { font-size: 11px; color: #111; }
+
+  /* 結果エリア */
+  .result-header { display: flex; align-items: center; gap: 3px; margin-bottom: 3px; padding-left: 36px; }
+  .rh-cell { flex: 1; text-align: center; font-size: 10px; color: #e8e8e8; }
+  .rh-cell.w2 { flex: 2; }
+  .result-row { display: flex; align-items: center; gap: 3px; margin-bottom: 4px; }
+  .res-name { width: 33px; height: 40px; border: 1px solid #555; background: #2a2a3e; color: #e0e0e0; font-size: 13px; font-weight: bold; border-radius: 6px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; cursor: pointer; -webkit-user-select: none; user-select: none; overflow: hidden; white-space: nowrap; }
+  .res-name.shi-active { background: #2a2a3e; border-color: #555; color: #e0e0e0; }
+  .res-box { flex: 1; height: 40px; background: #0d0d1a; border: 1px solid #2a3a2a; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: bold; color: #2ecc71; min-width: 0; }
+  .res-box.yo { color: #e74c3c; }
+  .res-sep { font-size: 12px; color: #e8e8e8; flex-shrink: 0; }
+  .res-vline { width: 2px; height: 40px; background: #4a4a6e; flex-shrink: 0; }
+
+  /* モーダル */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 100; align-items: center; justify-content: center; }
+  .modal-overlay.show { display: flex; }
+  .modal { background: #1e1e3a; border: 1px solid #444; border-radius: 12px; padding: 24px 20px; text-align: center; width: 260px; }
+  .modal p { font-size: 15px; margin-bottom: 20px; color: #e0e0e0; }
+  .modal-btns { display: flex; gap: 12px; justify-content: center; }
+  .modal-btns button { flex: 1; height: 40px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold; border: none; }
+  .btn-yes { background: #c0392b; color: #fff; }
+  .btn-no  { background: #2a2a4e; color: #aaa; }
+</style>
+</head>
+<body>
+<div class="app">
+  <h1>麻雀　優勝条件</h1>
+
+  <!-- 順位点バー -->
+  <div class="rankpts-bar">
+    <span class="row-label">順位点</span>
+    <div class="rpt-item"><span class="rpt-num">1</span><div class="rpt-val" id="rpt-1" onclick="selectInput('rpt-1')">500</div></div>
+    <div class="rpt-item"><button class="btn-minus" id="rpt-minus-2" onclick="toggleRptMinus(2)" style="flex-shrink:0;width:18px;">－</button><span class="rpt-num">2</span><div class="rpt-val" id="rpt-2" onclick="selectInput('rpt-2')">100</div></div>
+    <div class="rpt-item"><button class="btn-minus" id="rpt-minus-3" onclick="toggleRptMinus(3)" style="flex-shrink:0;width:18px;">－</button><span class="rpt-num">3</span><div class="rpt-val neg" id="rpt-3" onclick="selectInput('rpt-3')">▲100</div></div>
+    <div class="rpt-item"><button class="btn-minus" id="rpt-minus-4" onclick="toggleRptMinus(4)" style="flex-shrink:0;width:18px;">－</button><span class="rpt-num">4</span><div class="rpt-val neg" id="rpt-4" onclick="selectInput('rpt-4')">▲300</div></div>
+    <div class="rpt-hara"><span class="rpt-hara-label">原</span><div class="rpt-hara-val" id="rpt-hara" onclick="selectInput('rpt-hara')">300</div></div>
+  </div>
+
+  <!-- 繰P行 -->
+  <div class="row">
+    <span class="row-label">繰P</span>
+    <button class="btn-minus" id="minus-kuri-A" onclick="toggleMinusKuri('A')">－</button>
+    <div class="score-display" id="disp-kuri-A" onclick="selectInput('kuri-A')">＿＿＿</div>
+    <button class="btn-minus" id="minus-kuri-B" onclick="toggleMinusKuri('B')">－</button>
+    <div class="score-display" id="disp-kuri-B" onclick="selectInput('kuri-B')">＿＿＿</div>
+    <button class="btn-minus" id="minus-kuri-C" onclick="toggleMinusKuri('C')">－</button>
+    <div class="score-display" id="disp-kuri-C" onclick="selectInput('kuri-C')">＿＿＿</div>
+    <button class="btn-minus" id="minus-kuri-D" onclick="toggleMinusKuri('D')">－</button>
+    <div class="score-display" id="disp-kuri-D" onclick="selectInput('kuri-D')">＿＿＿</div>
+    <div class="sum-box" id="disp-kuri-sum"></div>
+  </div>
+
+  <!-- 名前行 -->
+  <div class="row">
+    <span class="row-label">名前</span>
+    <button class="btn-player" id="btn-A"
+      onclick="selectInput('A')" onmousedown="startLongPress('A')" onmouseup="cancelLongPress()" onmouseleave="cancelLongPress()"
+      ontouchstart="startLongPress('A')" ontouchend="cancelLongPress()" ontouchmove="cancelLongPress()">A</button>
+    <button class="btn-player" id="btn-B"
+      onclick="selectInput('B')" onmousedown="startLongPress('B')" onmouseup="cancelLongPress()" onmouseleave="cancelLongPress()"
+      ontouchstart="startLongPress('B')" ontouchend="cancelLongPress()" ontouchmove="cancelLongPress()">B</button>
+    <button class="btn-player" id="btn-C"
+      onclick="selectInput('C')" onmousedown="startLongPress('C')" onmouseup="cancelLongPress()" onmouseleave="cancelLongPress()"
+      ontouchstart="startLongPress('C')" ontouchend="cancelLongPress()" ontouchmove="cancelLongPress()">C</button>
+    <button class="btn-player" id="btn-D"
+      onclick="selectInput('D')" onmousedown="startLongPress('D')" onmouseup="cancelLongPress()" onmouseleave="cancelLongPress()"
+      ontouchstart="startLongPress('D')" ontouchend="cancelLongPress()" ontouchmove="cancelLongPress()">D</button>
+    <button class="btn-ac" onclick="confirmAC()">AC</button>
+  </div>
+
+  <!-- 持P行 -->
+  <div class="row">
+    <span class="row-label">持P</span>
+    <button class="btn-minus" id="minus-A" onclick="toggleMinus('A')">－</button>
+    <div class="score-display" id="disp-A" onclick="selectInput('A')">＿＿＿</div>
+    <button class="btn-minus" id="minus-B" onclick="toggleMinus('B')">－</button>
+    <div class="score-display" id="disp-B" onclick="selectInput('B')">＿＿＿</div>
+    <button class="btn-minus" id="minus-C" onclick="toggleMinus('C')">－</button>
+    <div class="score-display" id="disp-C" onclick="selectInput('C')">＿＿＿</div>
+    <button class="btn-minus" id="minus-D" onclick="toggleMinus('D')">－</button>
+    <div class="score-display" id="disp-D" onclick="selectInput('D')">＿＿＿</div>
+    <div class="sum-box" id="disp-sum"></div>
+  </div>
+
+  <!-- 総P行 -->
+  <div class="row">
+    <span class="row-label">総P</span>
+    <div class="disp-box" id="totalp-A">—</div>
+    <div class="disp-box" id="totalp-B">—</div>
+    <div class="disp-box" id="totalp-C">—</div>
+    <div class="disp-box" id="totalp-D">—</div>
+    <div style="width:44px;flex-shrink:0;"></div>
+  </div>
+
+  <!-- 順位行 -->
+  <div class="row">
+    <span class="row-label">順位</span>
+    <div class="disp-box" id="rank-A">—</div>
+    <div class="disp-box" id="rank-B">—</div>
+    <div class="disp-box" id="rank-C">—</div>
+    <div class="disp-box" id="rank-D">—</div>
+    <div class="kyoku-wrap">
+      <span style="font-size:11px;color:#111;">供</span>
+      <div class="kyoku-display selected-kyoku" id="disp-kyoku" onclick="selectInput('kyoku')">＿</div>
+    </div>
+  </div>
+
+  <!-- P差行 -->
+  <div class="row">
+    <span class="row-label">P差</span>
+    <div class="disp-box" id="pdiff-A">—</div>
+    <div class="disp-box" id="pdiff-B">—</div>
+    <div class="disp-box" id="pdiff-C">—</div>
+    <div class="disp-box" id="pdiff-D">—</div>
+    <div class="kyoku-wrap">
+      <span style="font-size:11px;color:#111;">積</span>
+      <div class="kyoku-display" id="disp-zumi" onclick="selectInput('zumi')">＿</div>
+    </div>
+  </div>
+
+  <!-- 親子 + ACボタン -->
+  <div class="row">
+    <span class="row-label"></span>
+    <button class="btn-oya is-oya" id="oya-A" onclick="selectOya('A')">親</button>
+    <button class="btn-oya is-ko"  id="oya-B" onclick="selectOya('B')">子</button>
+    <button class="btn-oya is-ko"  id="oya-C" onclick="selectOya('C')">子</button>
+    <button class="btn-oya is-ko"  id="oya-D" onclick="selectOya('D')">子</button>
+    <button class="btn-clear-sel" onclick="clearSelected()">C</button>
+  </div>
+
+  <!-- 数字パッド -->
+  <div class="numpad">
+    <button class="btn-num" onclick="inputNum(1)">1</button>
+    <button class="btn-num" onclick="inputNum(2)">2</button>
+    <button class="btn-num" onclick="inputNum(3)">3</button>
+    <button class="btn-num" onclick="inputNum(4)">4</button>
+    <button class="btn-num" onclick="inputNum(5)">5</button>
+    <button class="btn-num" onclick="inputNum(6)">6</button>
+    <button class="btn-num" onclick="inputNum(7)">7</button>
+    <button class="btn-num" onclick="inputNum(8)">8</button>
+    <button class="btn-num" onclick="inputNum(9)">9</button>
+    <button class="btn-num" onclick="inputNum(0)">0</button>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 試算行（変動値入力） -->
+  <div class="row">
+    <span class="row-label shisan-label">試算</span>
+    <button class="btn-minus" id="minus-shi-A" onclick="toggleMinusShi('A')">－</button>
+    <div class="score-display" id="disp-shi-A" onclick="selectInput('shi-A')">＿＿＿</div>
+    <button class="btn-minus" id="minus-shi-B" onclick="toggleMinusShi('B')">－</button>
+    <div class="score-display" id="disp-shi-B" onclick="selectInput('shi-B')">＿＿＿</div>
+    <button class="btn-minus" id="minus-shi-C" onclick="toggleMinusShi('C')">－</button>
+    <div class="score-display" id="disp-shi-C" onclick="selectInput('shi-C')">＿＿＿</div>
+    <button class="btn-minus" id="minus-shi-D" onclick="toggleMinusShi('D')">－</button>
+    <div class="score-display" id="disp-shi-D" onclick="selectInput('shi-D')">＿＿＿</div>
+    <div class="sum-box" id="disp-shi-sum"></div>
+  </div>
+
+  <!-- 試P行 -->
+  <div class="row">
+    <span class="row-label shisan-label">試P</span>
+    <div class="disp-box" id="ship-A">—</div>
+    <div class="disp-box" id="ship-B">—</div>
+    <div class="disp-box" id="ship-C">—</div>
+    <div class="disp-box" id="ship-D">—</div>
+    <div style="width:44px;flex-shrink:0;"></div>
+  </div>
+
+  <!-- 試順行 -->
+  <div class="row">
+    <span class="row-label shisan-label">試順</span>
+    <div class="disp-box" id="shirank-A">—</div>
+    <div class="disp-box" id="shirank-B">—</div>
+    <div class="disp-box" id="shirank-C">—</div>
+    <div class="disp-box" id="shirank-D">—</div>
+    <div style="width:44px;flex-shrink:0;"></div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 結果ヘッダー -->
+  <div class="result-header">
+    <span class="rh-cell w2">ツモ</span>
+    <span class="rh-cell">余</span>
+    <div style="width:2px;flex-shrink:0;"></div>
+    <span class="rh-cell">ロン</span>
+    <div style="width:2px;flex-shrink:0;"></div>
+    <span class="rh-cell">直</span>
+    <span class="rh-cell">余</span>
+  </div>
+  <div class="result-row">
+    <div class="res-name shi-active" id="res-name-A" onclick="selectShi('A')" onmousedown="startLongPress('A')" onmouseup="cancelLongPress()" onmouseleave="cancelLongPress()" ontouchstart="startLongPress('A')" ontouchend="cancelLongPress()" ontouchmove="cancelLongPress()">A</div>
+    <div class="res-box" id="rt1-A">—</div><span class="res-sep">-</span><div class="res-box" id="rt2-A">—</div>
+    <div class="res-box yo" id="rty-A">—</div><div class="res-vline"></div>
+    <div class="res-box" id="rr-A">—</div><div class="res-vline"></div>
+    <div class="res-box" id="rc-A">—</div><div class="res-box yo" id="rcy-A">—</div>
+  </div>
+  <div class="result-row">
+    <div class="res-name" id="res-name-B" onclick="selectShi('B')" onmousedown="startLongPress('B')" onmouseup="cancelLongPress()" onmouseleave="cancelLongPress()" ontouchstart="startLongPress('B')" ontouchend="cancelLongPress()" ontouchmove="cancelLongPress()">B</div>
+    <div class="res-box" id="rt1-B">—</div><span class="res-sep">-</span><div class="res-box" id="rt2-B">—</div>
+    <div class="res-box yo" id="rty-B">—</div><div class="res-vline"></div>
+    <div class="res-box" id="rr-B">—</div><div class="res-vline"></div>
+    <div class="res-box" id="rc-B">—</div><div class="res-box yo" id="rcy-B">—</div>
+  </div>
+  <div class="result-row">
+    <div class="res-name" id="res-name-C" onclick="selectShi('C')" onmousedown="startLongPress('C')" onmouseup="cancelLongPress()" onmouseleave="cancelLongPress()" ontouchstart="startLongPress('C')" ontouchend="cancelLongPress()" ontouchmove="cancelLongPress()">C</div>
+    <div class="res-box" id="rt1-C">—</div><span class="res-sep">-</span><div class="res-box" id="rt2-C">—</div>
+    <div class="res-box yo" id="rty-C">—</div><div class="res-vline"></div>
+    <div class="res-box" id="rr-C">—</div><div class="res-vline"></div>
+    <div class="res-box" id="rc-C">—</div><div class="res-box yo" id="rcy-C">—</div>
+  </div>
+  <div class="result-row">
+    <div class="res-name" id="res-name-D" onclick="selectShi('D')" onmousedown="startLongPress('D')" onmouseup="cancelLongPress()" onmouseleave="cancelLongPress()" ontouchstart="startLongPress('D')" ontouchend="cancelLongPress()" ontouchmove="cancelLongPress()">D</div>
+    <div class="res-box" id="rt1-D">—</div><span class="res-sep">-</span><div class="res-box" id="rt2-D">—</div>
+    <div class="res-box yo" id="rty-D">—</div><div class="res-vline"></div>
+    <div class="res-box" id="rr-D">—</div><div class="res-vline"></div>
+    <div class="res-box" id="rc-D">—</div><div class="res-box yo" id="rcy-D">—</div>
+  </div>
+</div>
+
+<!-- ACモーダル -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <p>データを消去しますか？</p>
+    <div class="modal-btns">
+      <button class="btn-yes" onclick="doAC()">はい</button>
+      <button class="btn-no"  onclick="closeModal()">いいえ</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── 定数 ──
+let RANK_PTS = [500, 100, -100, -300];
+let HARA = 300;
+
+// ── 状態 ──
+const scores     = {A:'',B:'',C:'',D:''};
+const minusFlag  = {A:false,B:false,C:false,D:false};
+const kuriScores = {A:'',B:'',C:'',D:''};
+const kuriMinus  = {A:false,B:false,C:false,D:false};
+const shiScores  = {A:'',B:'',C:'',D:''};
+const shiMinus   = {A:false,B:false,C:false,D:false};
+const rptBuf     = {'rpt-1':'','rpt-2':'','rpt-3':'','rpt-4':'','rpt-hara':''};
+const rptMinusF  = {'rpt-1':false,'rpt-2':false,'rpt-3':true,'rpt-4':true,'rpt-hara':false};
+let kyoku='', zumi='';
+let oyaPlayer='A', selectedInput='A', shiPlayer='A';
+const names={A:'A',B:'B',C:'C',D:'D'};
+
+// ── 値取得 ──
+function getVal(p)     { if(!scores[p])    return null; const v=parseInt(scores[p]);    return minusFlag[p]?-v:v; }
+function getKuriVal(p) { if(!kuriScores[p])return null; const v=parseInt(kuriScores[p]);return kuriMinus[p]?-v:v; }
+function getShiVal(p)  { if(!shiScores[p]) return null; const v=parseInt(shiScores[p]); return shiMinus[p]?-v:v; }
+
+// ── 表示 ──
+function setDisp(id, v) {
+  const el=document.getElementById(id);
+  if(v===null){el.innerHTML='＿＿＿';el.style.color='';return;}
+  if(v<0) el.innerHTML='<span style="color:#e74c3c">▲'+Math.abs(v)+'</span>';
+  else {el.innerHTML=String(v);el.style.color='';}
+}
+function updateDisp(p)     { setDisp('disp-'+p,      getVal(p)); }
+function updateKuriDisp(p) { setDisp('disp-kuri-'+p, getKuriVal(p)); }
+function updateShiDisp(p)  { setDisp('disp-shi-'+p,  getShiVal(p)); }
+
+function setBox(el,v,isYo){
+  if(v===null){el.textContent='—';el.style.color='';return;}
+  if(v==='ALL'){el.textContent='ALL';el.style.color='#f39c12';return;}
+  if(v<0){el.textContent='▲'+Math.abs(v);el.style.color='#e74c3c';}
+  else{el.textContent=String(v);el.style.color=isYo?'#2ecc71':'';}
+}
+
+// ── 順位点マイナストグル ──
+function toggleRptMinus(idx) {
+  const key = 'rpt-' + idx;
+  rptMinusF[key] = !rptMinusF[key];
+  const btn = document.getElementById('rpt-minus-' + idx);
+  if (btn) btn.classList.toggle('active', rptMinusF[key]);
+  // 現在の値に符号を適用
+  const v = Math.abs(RANK_PTS[idx-1]);
+  RANK_PTS[idx-1] = rptMinusF[key] ? -v : v;
+  updateRptDisplay(); calcAll();
+}
+
+// ── 全入力欄のハイライト更新 ──
+function updateHighlight() {
+  // すべての入力欄からselected-inputを外す
+  document.querySelectorAll('.score-display,.rpt-val,.rpt-hara-val').forEach(el=>el.classList.remove('selected-input'));
+  const si = selectedInput;
+  // 持P
+  if(['A','B','C','D'].includes(si)) { const el=document.getElementById('disp-'+si); if(el) el.classList.add('selected-input'); }
+  // 繰P
+  else if(si.startsWith('kuri-')) { const el=document.getElementById('disp-'+si.replace('kuri-','kuri-')); if(el) el.classList.add('selected-input'); }
+  // 試算
+  else if(si.startsWith('shi-')) { const el=document.getElementById('disp-'+si); if(el) el.classList.add('selected-input'); }
+  // 順位点
+  else if(si.startsWith('rpt-')) { const el=document.getElementById(si); if(el) el.classList.add('selected-input'); }
+  // 供・積
+  document.getElementById('disp-kyoku').classList.toggle('selected-input',si==='kyoku');
+  document.getElementById('disp-zumi').classList.toggle('selected-input',si==='zumi');
+}
+
+// ── 入力選択 ──
+function selectInput(id) {
+  selectedInput = id;
+  if(id.startsWith('rpt-')) rptBuf[id]=''; // 順位点は新規入力開始
+  updateHighlight();
+}
+
+// ── 数字入力 ──
+function inputNum(n) {
+  const p=selectedInput;
+  if(['A','B','C','D'].includes(p)) {
+    if(scores[p].length>=4) scores[p]='';
+    scores[p]+=String(n);
+    updateDisp(p); calcAll();
+  } else if(p.startsWith('kuri-')) {
+    const pp=p.slice(5);
+    if(kuriScores[pp].length>=4) kuriScores[pp]='';
+    kuriScores[pp]+=String(n);
+    updateKuriDisp(pp); calcAll();
+  } else if(p.startsWith('shi-')) {
+    const pp=p.slice(4);
+    if(shiScores[pp].length>=3) shiScores[pp]='';
+    shiScores[pp]+=String(n);
+    updateShiDisp(pp); calcShisan();
+  } else if(p.startsWith('rpt-')) {
+    if(rptBuf[p].length>=3) rptBuf[p]='';
+    rptBuf[p]+=String(n);
+    const v=parseInt(rptBuf[p]);
+    if(p==='rpt-hara') HARA=v;
+    else { const idx=parseInt(p.slice(4))-1; RANK_PTS[idx]=rptMinusF[p]?-v:v; }
+    updateRptDisplay(); calcAll();
+  } else if(p==='kyoku') {
+    kyoku=String(n); document.getElementById('disp-kyoku').textContent=kyoku; calcAll();
+  } else if(p==='zumi') {
+    zumi=String(n); document.getElementById('disp-zumi').textContent=zumi; calcAll();
+  }
+}
+
+// ── 選択中の枠をクリア ──
+function clearSelected() {
+  const p=selectedInput;
+  if(['A','B','C','D'].includes(p)) { scores[p]=''; minusFlag[p]=false; document.getElementById('minus-'+p).classList.remove('active'); updateDisp(p); calcAll(); }
+  else if(p.startsWith('kuri-')) { const pp=p.slice(5); kuriScores[pp]=''; kuriMinus[pp]=false; document.getElementById('minus-kuri-'+pp).classList.remove('active'); updateKuriDisp(pp); calcAll(); }
+  else if(p.startsWith('shi-')) { const pp=p.slice(4); shiScores[pp]=''; shiMinus[pp]=false; document.getElementById('minus-shi-'+pp).classList.remove('active'); updateShiDisp(pp); calcShisan(); }
+  else if(p.startsWith('rpt-')) { rptBuf[p]=''; rptMinusF[p]=false; if(p==='rpt-hara') HARA=300; else { const idx=parseInt(p.slice(4))-1; RANK_PTS[idx]=[50,10,-10,-30][idx]; } updateRptDisplay(); calcAll(); }
+  else if(p==='kyoku') { kyoku=''; document.getElementById('disp-kyoku').textContent='＿'; calcAll(); }
+  else if(p==='zumi') { zumi=''; document.getElementById('disp-zumi').textContent='＿'; calcAll(); }
+}
+
+// ── 順位点表示更新 ──
+function updateRptDisplay() {
+  for(let i=0;i<4;i++){
+    const el=document.getElementById('rpt-'+(i+1));
+    const v=RANK_PTS[i];
+    el.textContent=v<0?'▲'+Math.abs(v):String(v);
+    el.className='rpt-val'+(v<0?' neg':'');
+    if(selectedInput==='rpt-'+(i+1)) el.classList.add('selected-input');
+  }
+  const haraEl=document.getElementById('rpt-hara');
+  haraEl.textContent=String(HARA);
+  if(selectedInput==='rpt-hara') haraEl.classList.add('selected-input');
+}
+
+// ── マイナス ──
+function toggleMinus(p) { minusFlag[p]=!minusFlag[p]; document.getElementById('minus-'+p).classList.toggle('active',minusFlag[p]); updateDisp(p); calcAll(); }
+function toggleMinusKuri(p) { kuriMinus[p]=!kuriMinus[p]; document.getElementById('minus-kuri-'+p).classList.toggle('active',kuriMinus[p]); updateKuriDisp(p); calcAll(); }
+function toggleMinusShi(p) { shiMinus[p]=!shiMinus[p]; document.getElementById('minus-shi-'+p).classList.toggle('active',shiMinus[p]); updateShiDisp(p); calcShisan(); }
+
+// ── 順位計算（同点同順位） ──
+function calcRanks(vals) {
+  const r={A:null,B:null,C:null,D:null};
+  ['A','B','C','D'].forEach(p=>{
+    if(vals[p]===null)return;
+    let rk=1; ['A','B','C','D'].forEach(q=>{if(q!==p&&vals[q]!==null&&vals[q]>vals[p])rk++;});
+    r[p]=rk;
+  });
+  return r;
+}
+
+// 総P = 持P + 順位点(持Pの順位で決まる) + 繰P
+function calcTotalPs(holdVals, kuriVals) {
+  const holdRanks = calcRanks(holdVals); // 同点は同順位
+  // 順位点の折半処理
+  // 各プレイヤーの順位点を計算（同順位の場合は折半）
+  const rptForPlayer = {A:0,B:0,C:0,D:0};
+  // 使用済み順位をグループ化
+  const rankGroups = {};
+  ['A','B','C','D'].forEach(p=>{
+    if(holdRanks[p]===null) return;
+    const r = holdRanks[p];
+    if(!rankGroups[r]) rankGroups[r]=[];
+    rankGroups[r].push(p);
+  });
+  Object.entries(rankGroups).forEach(([rank, players])=>{
+    const r = parseInt(rank);
+    const count = players.length;
+    // 該当順位から count 分の順位点を合算して均等割り
+    let sum = 0;
+    for(let i=0;i<count;i++){
+      const idx = r-1+i;
+      if(idx < RANK_PTS.length) sum += RANK_PTS[idx];
+    }
+    const avg = sum / count;
+    players.forEach(p=>{ rptForPlayer[p] = avg; });
+  });
+
+  const totalPs = {A:null,B:null,C:null,D:null};
+  ['A','B','C','D'].forEach(p=>{
+    if(holdVals[p]===null) return;
+    const kuri = kuriVals[p]||0;
+    totalPs[p] = holdVals[p] - HARA + rptForPlayer[p] + kuri;
+  });
+  return totalPs;
+}
+
+// ── 全計算 ──
+function calcAll() {
+  calcSum();
+  calcKuriSum();
+  const holdVals = {A:getVal('A'),B:getVal('B'),C:getVal('C'),D:getVal('D')};
+  const kuriVals = {A:getKuriVal('A')||0,B:getKuriVal('B')||0,C:getKuriVal('C')||0,D:getKuriVal('D')||0};
+  const totalPs  = calcTotalPs(holdVals, kuriVals);
+  const totalRanks = calcRanks(totalPs);
+
+  // 総P表示
+  ['A','B','C','D'].forEach(p=>{
+    const el=document.getElementById('totalp-'+p);
+    const v=totalPs[p];
+    if(v===null){el.textContent='—';el.style.color='';el.className='disp-box';return;}
+    el.textContent=v<0?'▲'+Math.abs(v):String(v);
+    el.style.color=v<0?'#e74c3c':(v>0?'#2ecc71':'');
+    el.className='disp-box'+(totalRanks[p]===1?' top':'');
+  });
+
+  // 順位表示
+  const topP = Math.max(...Object.values(totalPs).filter(v=>v!==null).concat([-Infinity]));
+  ['A','B','C','D'].forEach(p=>{
+    const rankEl=document.getElementById('rank-'+p);
+    const pdiffEl=document.getElementById('pdiff-'+p);
+    if(totalPs[p]===null){rankEl.textContent='—';rankEl.style.color='';pdiffEl.textContent='—';pdiffEl.style.color='';return;}
+    const r=totalRanks[p];
+    rankEl.textContent=r+'位'; rankEl.style.color=r===1?'#f39c12':'';
+    const diff=topP-totalPs[p];
+    pdiffEl.textContent=String(diff);
+    pdiffEl.style.color=diff===0?'#f39c12':'#e0e0e0';
+  });
+
+  calcResult();
+  calcShisan();
+}
+
+function calcSum() {
+  const kyokuVal=kyoku===''?null:parseInt(kyoku);
+  const vals=['A','B','C','D'].map(p=>getVal(p));
+  const sumEl=document.getElementById('disp-sum');
+  const filled=vals.filter(v=>v!==null);
+  const kPart=kyokuVal!==null?kyokuVal*10:0;
+  if(filled.length===0&&kyokuVal===null){sumEl.textContent='';sumEl.className='sum-box';return;}
+  const total=filled.reduce((a,b)=>a+b,0)+kPart;
+  sumEl.textContent=total<0?'▲'+Math.abs(total):String(total);
+  sumEl.className='sum-box'+(total===1000?'':' error');
+}
+
+function calcKuriSum() {
+  const vals=['A','B','C','D'].map(p=>getKuriVal(p));
+  const sumEl=document.getElementById('disp-kuri-sum');
+  const filled=vals.filter(v=>v!==null);
+  if(filled.length===0){sumEl.textContent='';return;}
+  const total=filled.reduce((a,b)=>a+b,0);
+  sumEl.textContent=total<0?'▲'+Math.abs(total):String(total);
+}
+
+function calcShisan() {
+  const holdVals  = {A:getVal('A'),B:getVal('B'),C:getVal('C'),D:getVal('D')};
+  const shiVals   = {A:getShiVal('A'),B:getShiVal('B'),C:getShiVal('C'),D:getShiVal('D')};
+  const kuriVals  = {A:getKuriVal('A')||0,B:getKuriVal('B')||0,C:getKuriVal('C')||0,D:getKuriVal('D')||0};
+
+  // 試算合計
+  const filled=Object.values(shiVals).filter(v=>v!==null);
+  const sumEl=document.getElementById('disp-shi-sum');
+  if(filled.length===0){sumEl.textContent='';}
+  else{const t=filled.reduce((a,b)=>a+b,0);sumEl.textContent=t<0?'▲'+Math.abs(t):String(t);}
+
+  // 試算後の持P = 持P + 変動値
+  const simHold={A:null,B:null,C:null,D:null};
+  ['A','B','C','D'].forEach(p=>{
+    const base=holdVals[p]; const delta=shiVals[p]||0;
+    simHold[p]=base!==null?base+delta:null;
+  });
+  const simTotalPs = calcTotalPs(simHold, kuriVals);
+  const simRanks   = calcRanks(simTotalPs);
+
+  ['A','B','C','D'].forEach(p=>{
+    const shipEl=document.getElementById('ship-'+p);
+    const shirankEl=document.getElementById('shirank-'+p);
+    if(simTotalPs[p]===null){shipEl.textContent='—';shipEl.style.color='';shirankEl.textContent='—';shirankEl.style.color='';return;}
+    const pv=simTotalPs[p];
+    shipEl.textContent=pv<0?'▲'+Math.abs(pv):String(pv);
+    shipEl.style.color=pv<0?'#e74c3c':(pv>0?'#2ecc71':'');
+    const r=simRanks[p];
+    shirankEl.textContent=r+'位'; shirankEl.style.color=r===1?'#f39c12':'';
+  });
+}
+
+// ── 視点選択 ──
+function selectShi(p) {
+  shiPlayer=p;
+  ['A','B','C','D'].forEach(x=>{
+    document.getElementById('res-name-'+x).classList.toggle('shi-active',x===p);
+  });
+  calcResult();
+}
+
+function selectOya(p) {
+  oyaPlayer=p;
+  ['A','B','C','D'].forEach(x=>{
+    const btn=document.getElementById('oya-'+x);
+    btn.textContent=x===p?'親':'子';
+    btn.className='btn-oya '+(x===p?'is-oya':'is-ko');
+  });
+  calcResult();
+}
+
+// ── 長押し名前入力 ──
+let longPressTimer=null;
+function startLongPress(p) {
+  longPressTimer=setTimeout(()=>{
+    const name=prompt('名前を入力（'+p+'）:',names[p]===p?'':names[p]);
+    if(name!==null){
+      const label=name.trim()===''?p:name.trim().slice(0,4);
+      names[p]=label;
+      // 上部名前ボタン
+      const btnEl=document.getElementById('btn-'+p);
+      if(btnEl) btnEl.textContent=label;
+      // 視点ボタン
+
+      // 結果行
+      const resEl=document.getElementById('res-name-'+p);
+      if(resEl) resEl.textContent=label;
+    }
+  },600);
+}
+function cancelLongPress(){if(longPressTimer){clearTimeout(longPressTimer);longPressTimer=null;}}
+
+// ── AC ──
+function confirmAC(){document.getElementById('modal').classList.add('show');}
+function closeModal(){document.getElementById('modal').classList.remove('show');}
+function doAC(){
+  ['A','B','C','D'].forEach(p=>{
+    scores[p]='';minusFlag[p]=false;
+    kuriScores[p]='';kuriMinus[p]=false;
+    shiScores[p]='';shiMinus[p]=false;
+    ['','kuri-','shi-'].forEach(pre=>{
+      const el=document.getElementById('minus-'+pre+p); if(el)el.classList.remove('active');
+    });
+    updateDisp(p);updateKuriDisp(p);updateShiDisp(p);
+  });
+  kyoku='';zumi='';
+  document.getElementById('disp-kyoku').textContent='＿';
+  document.getElementById('disp-zumi').textContent='＿';
+  closeModal(); calcAll();
+}
+
+// ── 同点条件計算（総Pベース） ──
+function ceilDiv(a,b){return Math.ceil(a/b);}
+
+// 持PがnewHoldになった時の総P
+function getTotalPifHold(me, newHold) {
+  const holdVals={A:getVal('A'),B:getVal('B'),C:getVal('C'),D:getVal('D')};
+  holdVals[me]=newHold;
+  const kuriVals={A:getKuriVal('A')||0,B:getKuriVal('B')||0,C:getKuriVal('C')||0,D:getKuriVal('D')||0};
+  const totalPs=calcTotalPs(holdVals,kuriVals);
+  return totalPs;
+}
+
+// ターゲットの総P（現在）
+function getTargetTotalP(me) {
+  const holdVals={A:getVal('A'),B:getVal('B'),C:getVal('C'),D:getVal('D')};
+  const kuriVals={A:getKuriVal('A')||0,B:getKuriVal('B')||0,C:getKuriVal('C')||0,D:getKuriVal('D')||0};
+  const totalPs=calcTotalPs(holdVals,kuriVals);
+  const others=['A','B','C','D'].filter(p=>p!==me).filter(p=>totalPs[p]!==null);
+  if(others.length===0)return null;
+  return Math.max(...others.map(p=>totalPs[p]));
+}
+
+// 必要な持P変動量を求める：自分の持PがX増えた時に総Pが同点になるXを探す
+// 総P = 新持P + 新順位点 + 繰P
+// 新順位点は新持Pの順位で変わるので、バイナリサーチで解く
+function findRequiredHoldDelta(me) {
+  const holdVals={A:getVal('A'),B:getVal('B'),C:getVal('C'),D:getVal('D')};
+  const kuriVals={A:getKuriVal('A')||0,B:getKuriVal('B')||0,C:getKuriVal('C')||0,D:getKuriVal('D')||0};
+  if(holdVals[me]===null)return null;
+
+  const curTotalPs=calcTotalPs(holdVals,kuriVals);
+  const others=['A','B','C','D'].filter(p=>p!==me).filter(p=>curTotalPs[p]!==null);
+  if(others.length===0)return null;
+  const targetTotalP=Math.max(...others.map(p=>curTotalPs[p]));
+  const myCurrentTotalP=curTotalPs[me];
+  if(myCurrentTotalP===null)return null;
+  if(myCurrentTotalP>=targetTotalP)return 0;
+
+  // 持Pをdelta増やした場合の総P差を計算
+  function totalPDiff(delta) {
+    const newHold=holdVals[me]+delta;
+    const newHoldVals={...holdVals,[me]:newHold};
+    const newTotalPs=calcTotalPs(newHoldVals,kuriVals);
+    return newTotalPs[me]-targetTotalP;
+  }
+
+  // delta=0〜10000で探索（1点刻み）
+  for(let d=0;d<=10000;d++){
+    if(totalPDiff(d)>=0)return d;
+  }
+  return null;
+}
+
+function calcForPlayer(me) {
+  const holdVals={A:getVal('A'),B:getVal('B'),C:getVal('C'),D:getVal('D')};
+  const kyokuVal=kyoku===''?0:parseInt(kyoku);
+  const zumiVal=zumi===''?0:parseInt(zumi);
+
+  const ids=['rt1-','rt2-','rty-','rr-','rc-','rcy-'];
+  const clear=()=>ids.forEach(pre=>{const el=document.getElementById(pre+me);el.textContent='—';el.style.color='';});
+
+  if(holdVals[me]===null){clear();return;}
+  const requiredDelta=findRequiredHoldDelta(me);
+  if(requiredDelta===null){clear();return;}
+  if(requiredDelta===0){
+    // すでに1位
+    ids.forEach(pre=>{const el=document.getElementById(pre+me);el.textContent='—';el.style.color='';});
+    return;
+  }
+
+  // 供・積を引いた同点基準点（点数変動ベース）
+  const base=requiredDelta - kyokuVal*10;
+  const ron=base - zumiVal*3;
+  const tsumoBase=base - zumiVal*4;
+
+  let t1,t2,td;
+  if(oyaPlayer===me){
+    t1=ceilDiv(tsumoBase,4);t2='ALL';td=Math.abs(t1*4-tsumoBase);
+  } else {
+    // ターゲット（最大総Pの人）が親かどうか
+    const kuriVals={A:getKuriVal('A')||0,B:getKuriVal('B')||0,C:getKuriVal('C')||0,D:getKuriVal('D')||0};
+    const curTotalPs=calcTotalPs(holdVals,kuriVals);
+    const others=['A','B','C','D'].filter(p=>p!==me).filter(p=>curTotalPs[p]!==null);
+    const tp=others.reduce((a,b)=>curTotalPs[a]>curTotalPs[b]?a:b);
+    if(oyaPlayer===tp){t1=ceilDiv(tsumoBase,6);t2=t1*2;td=Math.abs(t1*6-tsumoBase);}
+    else{t1=ceilDiv(tsumoBase,5);t2=t1*2;td=Math.abs(t1*5-tsumoBase);}
+  }
+
+  const chokuBase=base-zumiVal*6;
+  const choku=ceilDiv(chokuBase,2);
+  const chokuDiff=Math.abs(choku*2-chokuBase);
+
+  setBox(document.getElementById('rt1-'+me),t1,false);
+  const t2el=document.getElementById('rt2-'+me);
+  if(t2==='ALL'){t2el.textContent='ALL';t2el.style.color='#f39c12';}
+  else if(t2<0){t2el.textContent='▲'+Math.abs(t2);t2el.style.color='#e74c3c';}
+  else{t2el.textContent=String(t2);t2el.style.color='';}
+  setBox(document.getElementById('rty-'+me),td,true);
+  setBox(document.getElementById('rr-'+me),ron,false);
+  setBox(document.getElementById('rc-'+me),choku,false);
+  setBox(document.getElementById('rcy-'+me),chokuDiff,true);
+}
+
+function calcResult(){['A','B','C','D'].forEach(p=>calcForPlayer(p));}
+
+// ── 初期化 ──
+updateRptDisplay();
+updateHighlight();
+selectShi('A');
+</script>
+</body>
+</html>
