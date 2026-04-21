@@ -490,6 +490,66 @@ function calcTotalPs(holdVals, kuriVals) {
   return totalPs;
 }
 
+
+// ── localStorage 保存・復元 ──
+function saveState() {
+  const nameMap = {};
+  ['A','B','C','D'].forEach(p => {
+    const el = document.getElementById('btn-'+p);
+    nameMap[p] = el ? el.textContent : p;
+  });
+  const state = {
+    scores, minusFlag, kuriScores, kuriMinus,
+    shiScores, shiMinus, kyoku, zumi,
+    oyaPlayer, shiPlayer, RANK_PTS, HARA, names: nameMap
+  };
+  try { localStorage.setItem('yusho_state', JSON.stringify(state)); } catch(e) {}
+}
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem('yusho_state');
+    if (!raw) return;
+    const s = JSON.parse(raw);
+    if (s.scores)     Object.assign(scores, s.scores);
+    if (s.minusFlag)  Object.assign(minusFlag, s.minusFlag);
+    if (s.kuriScores) Object.assign(kuriScores, s.kuriScores);
+    if (s.kuriMinus)  Object.assign(kuriMinus, s.kuriMinus);
+    if (s.shiScores)  Object.assign(shiScores, s.shiScores);
+    if (s.shiMinus)   Object.assign(shiMinus, s.shiMinus);
+    if (s.kyoku !== undefined) kyoku = s.kyoku;
+    if (s.zumi  !== undefined) zumi  = s.zumi;
+    if (s.oyaPlayer) oyaPlayer = s.oyaPlayer;
+    if (s.shiPlayer) shiPlayer = s.shiPlayer;
+    if (s.RANK_PTS)  RANK_PTS.splice(0,4,...s.RANK_PTS);
+    if (s.HARA !== undefined) HARA = s.HARA;
+    // 名前
+    if (s.names) {
+      ['A','B','C','D'].forEach(p => {
+        if (s.names[p]) {
+          names[p] = s.names[p];
+          const btn = document.getElementById('btn-'+p);
+          if (btn) btn.textContent = s.names[p];
+          const res = document.getElementById('res-name-'+p);
+          if (res) res.textContent = s.names[p];
+        }
+      });
+    }
+    // 表示反映
+    ['A','B','C','D'].forEach(p => {
+      updateDisp(p); updateKuriDisp(p); updateShiDisp(p);
+      document.getElementById('minus-'+p).classList.toggle('active', minusFlag[p]);
+      document.getElementById('minus-kuri-'+p).classList.toggle('active', kuriMinus[p]);
+      document.getElementById('minus-shi-'+p).classList.toggle('active', shiMinus[p]);
+    });
+    if (kyoku) document.getElementById('disp-kyoku').textContent = kyoku;
+    if (zumi)  document.getElementById('disp-zumi').textContent  = zumi;
+    selectOya(oyaPlayer);
+    selectShi(shiPlayer);
+    updateRptDisplay();
+    calcAll();
+  } catch(e) {}
+}
 // ── 全計算 ──
 function calcAll() {
   calcSum();
@@ -524,6 +584,7 @@ function calcAll() {
 
   calcResult();
   calcShisan();
+  saveState();
 }
 
 function calcSum() {
@@ -635,7 +696,7 @@ function doAC(){
   kyoku='';zumi='';
   document.getElementById('disp-kyoku').textContent='＿';
   document.getElementById('disp-zumi').textContent='＿';
-  closeModal(); calcAll();
+  closeModal(); calcAll(); saveState();
 }
 
 // ── 同点条件計算（総Pベース） ──
@@ -747,6 +808,7 @@ function calcResult(){['A','B','C','D'].forEach(p=>calcForPlayer(p));}
 updateRptDisplay();
 updateHighlight();
 selectShi('A');
+loadState();
 </script>
 </body>
 </html>
