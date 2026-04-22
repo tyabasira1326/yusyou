@@ -194,10 +194,10 @@
   <!-- 親子 + ACボタン -->
   <div class="row">
     <span class="row-label"></span>
-    <button class="btn-oya is-oya" id="oya-A" onclick="selectOya('A')">親</button>
+    <button class="btn-oya is-ko"  id="oya-A" onclick="selectOya('A')">子</button>
     <button class="btn-oya is-ko"  id="oya-B" onclick="selectOya('B')">子</button>
     <button class="btn-oya is-ko"  id="oya-C" onclick="selectOya('C')">子</button>
-    <button class="btn-oya is-ko"  id="oya-D" onclick="selectOya('D')">子</button>
+    <button class="btn-oya is-oya" id="oya-D" onclick="selectOya('D')">親</button>
     <button class="btn-clear-sel" onclick="clearSelected()">C</button>
   </div>
 
@@ -319,7 +319,7 @@ const shiMinus   = {A:false,B:false,C:false,D:false};
 const rptBuf     = {'rpt-1':'','rpt-2':'','rpt-3':'','rpt-4':'','rpt-hara':''};
 const rptMinusF  = {'rpt-1':false,'rpt-2':false,'rpt-3':true,'rpt-4':true,'rpt-hara':false};
 let kyoku='', zumi='';
-let oyaPlayer='A', selectedInput='A', shiPlayer='A';
+let oyaPlayer='D', selectedInput='A', shiPlayer='A';
 const names={A:'A',B:'B',C:'C',D:'D'};
 
 // ── 値取得 ──
