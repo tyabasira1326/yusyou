@@ -732,22 +732,19 @@ function findRequiredHoldDelta(me) {
   const curTotalPs=calcTotalPs(holdVals,kuriVals);
   const others=['A','B','C','D'].filter(p=>p!==me).filter(p=>curTotalPs[p]!==null);
   if(others.length===0)return null;
-  const targetTotalP=Math.max(...others.map(p=>curTotalPs[p]));
-  const myCurrentTotalP=curTotalPs[me];
-  if(myCurrentTotalP===null)return null;
-  if(myCurrentTotalP>=targetTotalP)return 0;
+  if(curTotalPs[me]===null)return null;
 
-  // 持Pをdelta増やした場合の総P差を計算
-  function totalPDiff(delta) {
-    const newHold=holdVals[me]+delta;
-    const newHoldVals={...holdVals,[me]:newHold};
-    const newTotalPs=calcTotalPs(newHoldVals,kuriVals);
-    return newTotalPs[me]-targetTotalP;
-  }
+  // 現在すでに1位（他全員より多い）なら0
+  const currentMax=Math.max(...others.map(p=>curTotalPs[p]));
+  if(curTotalPs[me]>=currentMax)return 0;
 
-  // delta=0〜10000で探索（1点刻み）
+  // delta増やした時、自分の総P >= 最大ターゲットの総P（ターゲットも変動する）
+  // delta=0〜10000で探索
   for(let d=0;d<=10000;d++){
-    if(totalPDiff(d)>=0)return d;
+    const newHoldVals={...holdVals,[me]:holdVals[me]+d};
+    const newTotalPs=calcTotalPs(newHoldVals,kuriVals);
+    const newOthersMax=Math.max(...others.map(p=>newTotalPs[p]));
+    if(newTotalPs[me]>=newOthersMax)return d;
   }
   return null;
 }
