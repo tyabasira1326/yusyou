@@ -317,6 +317,7 @@ const kuriMinus  = {A:false,B:false,C:false,D:false};
 const shiScores  = {A:'',B:'',C:'',D:''};
 const shiMinus   = {A:false,B:false,C:false,D:false};
 const rptBuf     = {'rpt-1':'','rpt-2':'','rpt-3':'','rpt-4':'','rpt-hara':''};
+let overwriteNext = false;
 const rptMinusF  = {'rpt-1':false,'rpt-2':false,'rpt-3':true,'rpt-4':true,'rpt-hara':false};
 let kyoku='', zumi='';
 let oyaPlayer='D', selectedInput='A', shiPlayer='A';
@@ -378,7 +379,16 @@ function updateHighlight() {
 // ── 入力選択 ──
 function selectInput(id) {
   selectedInput = id;
-  if(id.startsWith('rpt-')) rptBuf[id]=''; // 順位点は新規入力開始
+  if(id.startsWith('rpt-')) { rptBuf[id]=''; overwriteNext=false; }
+  else {
+    // 入力済みならフラグON
+    if(['A','B','C','D'].includes(id)) overwriteNext = scores[id]!=='';
+    else if(id.startsWith('kuri-')) { const pp=id.slice(5); overwriteNext=kuriScores[pp]!==''; }
+    else if(id.startsWith('shi-')) { const pp=id.slice(4); overwriteNext=shiScores[pp]!==''; }
+    else if(id==='kyoku') overwriteNext=kyoku!=='';
+    else if(id==='zumi')  overwriteNext=zumi!=='';
+    else overwriteNext=false;
+  }
   updateHighlight();
 }
 
@@ -386,17 +396,17 @@ function selectInput(id) {
 function inputNum(n) {
   const p=selectedInput;
   if(['A','B','C','D'].includes(p)) {
-    if(scores[p].length>=4) scores[p]='';
+    if(overwriteNext||scores[p].length>=4){scores[p]='';overwriteNext=false;}
     scores[p]+=String(n);
     updateDisp(p); calcAll();
   } else if(p.startsWith('kuri-')) {
     const pp=p.slice(5);
-    if(kuriScores[pp].length>=4) kuriScores[pp]='';
+    if(overwriteNext||kuriScores[pp].length>=4){kuriScores[pp]='';overwriteNext=false;}
     kuriScores[pp]+=String(n);
     updateKuriDisp(pp); calcAll();
   } else if(p.startsWith('shi-')) {
     const pp=p.slice(4);
-    if(shiScores[pp].length>=3) shiScores[pp]='';
+    if(overwriteNext||shiScores[pp].length>=3){shiScores[pp]='';overwriteNext=false;}
     shiScores[pp]+=String(n);
     updateShiDisp(pp); calcShisan();
   } else if(p.startsWith('rpt-')) {
@@ -407,8 +417,10 @@ function inputNum(n) {
     else { const idx=parseInt(p.slice(4))-1; RANK_PTS[idx]=rptMinusF[p]?-v:v; }
     updateRptDisplay(); calcAll();
   } else if(p==='kyoku') {
+    if(overwriteNext){kyoku='';overwriteNext=false;}
     kyoku=String(n); document.getElementById('disp-kyoku').textContent=kyoku; calcAll();
   } else if(p==='zumi') {
+    if(overwriteNext){zumi='';overwriteNext=false;}
     zumi=String(n); document.getElementById('disp-zumi').textContent=zumi; calcAll();
   }
 }
@@ -692,6 +704,10 @@ function doAC(){
       const el=document.getElementById('minus-'+pre+p); if(el)el.classList.remove('active');
     });
     updateDisp(p);updateKuriDisp(p);updateShiDisp(p);
+    // 名前をリセット
+    names[p]=p;
+    const btnEl=document.getElementById('btn-'+p); if(btnEl)btnEl.textContent=p;
+    const resEl=document.getElementById('res-name-'+p); if(resEl)resEl.textContent=p;
   });
   kyoku='';zumi='';
   document.getElementById('disp-kyoku').textContent='＿';
@@ -725,6 +741,10 @@ function getTargetTotalP(me) {
 // 総P = 新持P + 新順位点 + 繰P
 // 新順位点は新持Pの順位で変わるので、バイナリサーチで解く
 function findRequiredHoldDelta(me) {
+  // 供・積の値
+  const kyokuVal = kyoku===''?0:parseInt(kyoku);
+  const zumiVal  = zumi===''?0:parseInt(zumi);
+
   const holdVals={A:getVal('A'),B:getVal('B'),C:getVal('C'),D:getVal('D')};
   const kuriVals={A:getKuriVal('A')||0,B:getKuriVal('B')||0,C:getKuriVal('C')||0,D:getKuriVal('D')||0};
   if(holdVals[me]===null)return null;
@@ -734,12 +754,20 @@ function findRequiredHoldDelta(me) {
   if(others.length===0)return null;
   if(curTotalPs[me]===null)return null;
 
-  // 現在すでに1位（他全員より多い）なら0
   const currentMax=Math.max(...others.map(p=>curTotalPs[p]));
   if(curTotalPs[me]>=currentMax)return 0;
 
-  // delta増やした時、自分の総P >= 最大ターゲットの総P（ターゲットも変動する）
-  // delta=0〜10000で探索
+  // ロンで「ron点」上がった時の実際の持P増加 = ron + 供×10 + 積×3
+  // ツモで「t1点」上がった時の実際の持P増加 = t1*5(子払い合計) + 供×10 + 積×4
+  // 直撃で「choku点」上がった時の実際の持P増加 = choku*2 + 供×10 + 積×6
+  // findRequiredHoldDeltaでは「実際の持P増加量delta」を求め、
+  // そこから逆算してツモ/ロン/直の申告値を出す
+  // base = delta - 供×10
+  // ron  = base - 積×3  → 実持P増加 = ron + 供×10 + 積×3 = delta ✓
+  // tsumoBase = base - 積×4 → t1=ceil(tsumoBase/5), 実持P増加 = t1*5 + 供×10 + 積×4 ≒ delta
+  // chokuBase = base - 積×6 → choku=ceil(chokuBase/2), 実持P増加 = choku*2 + 供×10 + 積×6 ≒ delta
+
+  // deltaは「実際の持P増加量」なので、供・積込みで探索
   for(let d=0;d<=10000;d++){
     const newHoldVals={...holdVals,[me]:holdVals[me]+d};
     const newTotalPs=calcTotalPs(newHoldVals,kuriVals);
