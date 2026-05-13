@@ -84,6 +84,8 @@
   .res-sep { font-size: 12px; color: #e8e8e8; flex-shrink: 0; }
   .res-vline { width: 2px; height: 40px; background: #4a4a6e; flex-shrink: 0; }
 
+  .btn-kuri { width: 44px; height: 38px; border: 1px solid #1a5276; background: #0d2137; color: #7fdbff; font-size: 14px; font-weight: bold; border-radius: 6px; cursor: pointer; flex-shrink: 0; }
+
   /* モーダル */
   .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 100; align-items: center; justify-content: center; }
   .modal-overlay.show { display: flex; }
@@ -162,7 +164,7 @@
     <div class="disp-box" id="totalp-B">—</div>
     <div class="disp-box" id="totalp-C">—</div>
     <div class="disp-box" id="totalp-D">—</div>
-    <div style="width:44px;flex-shrink:0;"></div>
+    <button class="btn-kuri" onclick="confirmKuri()">繰</button>
   </div>
 
   <!-- 順位行 -->
@@ -290,6 +292,17 @@
     <div class="res-box yo" id="rty-D">—</div><div class="res-vline"></div>
     <div class="res-box" id="rr-D">—</div><div class="res-vline"></div>
     <div class="res-box" id="rc-D">—</div><div class="res-box yo" id="rcy-D">—</div>
+  </div>
+</div>
+
+<!-- 繰り越しモーダル -->
+<div class="modal-overlay" id="modal-kuri">
+  <div class="modal">
+    <p>繰り越しますか？</p>
+    <div class="modal-btns">
+      <button class="btn-yes" onclick="doKuri()">YES</button>
+      <button class="btn-no"  onclick="closeKuriModal()">NO</button>
+    </div>
   </div>
 </div>
 
@@ -713,6 +726,36 @@ function doAC(){
   document.getElementById('disp-kyoku').textContent='＿';
   document.getElementById('disp-zumi').textContent='＿';
   closeModal(); calcAll(); saveState();
+}
+
+// ── 繰り越し ──
+function confirmKuri() { document.getElementById('modal-kuri').classList.add('show'); }
+function closeKuriModal() { document.getElementById('modal-kuri').classList.remove('show'); }
+function doKuri() {
+  // 総Pを繰Pに移す、持Pを250にリセット
+  ['A','B','C','D'].forEach(p => {
+    const totalEl = document.getElementById('totalp-' + p);
+    const totalVal = totalEl.textContent.replace('▲','-').replace(/[^0-9\-]/g,'');
+    if (totalVal !== '' && totalVal !== '—') {
+      // 繰Pに設定
+      const v = parseInt(totalVal);
+      kuriScores[p] = String(Math.abs(v));
+      kuriMinus[p] = v < 0;
+      document.getElementById('minus-kuri-' + p).classList.toggle('active', kuriMinus[p]);
+      updateKuriDisp(p);
+    }
+    // 持Pを250に
+    scores[p] = '250';
+    minusFlag[p] = false;
+    document.getElementById('minus-' + p).classList.remove('active');
+    updateDisp(p);
+    // 試算リセット
+    shiScores[p] = ''; shiMinus[p] = false;
+    document.getElementById('minus-shi-' + p).classList.remove('active');
+    updateShiDisp(p);
+  });
+  closeKuriModal();
+  calcAll(); saveState();
 }
 
 // ── 同点条件計算（総Pベース） ──
