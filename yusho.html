@@ -293,6 +293,49 @@
     <div class="res-box" id="rr-D">—</div><div class="res-vline"></div>
     <div class="res-box" id="rc-D">—</div><div class="res-box yo" id="rcy-D">—</div>
   </div>
+
+  <!-- 2位同点エリア -->
+  <hr class="divider">
+  <div style="font-size:11px;color:#a0c4ff;margin-bottom:4px;text-align:center;">2位と同点条件</div>
+
+  <div class="result-header">
+    <span class="rh-cell w2">ツモ</span>
+    <span class="rh-cell">余</span>
+    <div style="width:2px;flex-shrink:0;"></div>
+    <span class="rh-cell">ロン</span>
+    <div style="width:2px;flex-shrink:0;"></div>
+    <span class="rh-cell">直</span>
+    <span class="rh-cell">余</span>
+  </div>
+
+  <div class="result-row">
+    <div class="res-name" id="res2-name-A" onclick="selectShi('A')" onmousedown="startLongPress('A')" onmouseup="cancelLongPress()" onmouseleave="cancelLongPress()" ontouchstart="startLongPress('A')" ontouchend="cancelLongPress()" ontouchmove="cancelLongPress()">A</div>
+    <div class="res-box" id="r2t1-A">—</div><span class="res-sep">-</span><div class="res-box" id="r2t2-A">—</div>
+    <div class="res-box yo" id="r2ty-A">—</div><div class="res-vline"></div>
+    <div class="res-box" id="r2r-A">—</div><div class="res-vline"></div>
+    <div class="res-box" id="r2c-A">—</div><div class="res-box yo" id="r2cy-A">—</div>
+  </div>
+  <div class="result-row">
+    <div class="res-name" id="res2-name-B" onclick="selectShi('B')" onmousedown="startLongPress('B')" onmouseup="cancelLongPress()" onmouseleave="cancelLongPress()" ontouchstart="startLongPress('B')" ontouchend="cancelLongPress()" ontouchmove="cancelLongPress()">B</div>
+    <div class="res-box" id="r2t1-B">—</div><span class="res-sep">-</span><div class="res-box" id="r2t2-B">—</div>
+    <div class="res-box yo" id="r2ty-B">—</div><div class="res-vline"></div>
+    <div class="res-box" id="r2r-B">—</div><div class="res-vline"></div>
+    <div class="res-box" id="r2c-B">—</div><div class="res-box yo" id="r2cy-B">—</div>
+  </div>
+  <div class="result-row">
+    <div class="res-name" id="res2-name-C" onclick="selectShi('C')" onmousedown="startLongPress('C')" onmouseup="cancelLongPress()" onmouseleave="cancelLongPress()" ontouchstart="startLongPress('C')" ontouchend="cancelLongPress()" ontouchmove="cancelLongPress()">C</div>
+    <div class="res-box" id="r2t1-C">—</div><span class="res-sep">-</span><div class="res-box" id="r2t2-C">—</div>
+    <div class="res-box yo" id="r2ty-C">—</div><div class="res-vline"></div>
+    <div class="res-box" id="r2r-C">—</div><div class="res-vline"></div>
+    <div class="res-box" id="r2c-C">—</div><div class="res-box yo" id="r2cy-C">—</div>
+  </div>
+  <div class="result-row">
+    <div class="res-name" id="res2-name-D" onclick="selectShi('D')" onmousedown="startLongPress('D')" onmouseup="cancelLongPress()" onmouseleave="cancelLongPress()" ontouchstart="startLongPress('D')" ontouchend="cancelLongPress()" ontouchmove="cancelLongPress()">D</div>
+    <div class="res-box" id="r2t1-D">—</div><span class="res-sep">-</span><div class="res-box" id="r2t2-D">—</div>
+    <div class="res-box yo" id="r2ty-D">—</div><div class="res-vline"></div>
+    <div class="res-box" id="r2r-D">—</div><div class="res-vline"></div>
+    <div class="res-box" id="r2c-D">—</div><div class="res-box yo" id="r2cy-D">—</div>
+  </div>
 </div>
 
 <!-- 繰り越しモーダル -->
@@ -323,7 +366,7 @@ let RANK_PTS = [500, 100, -100, -300];
 let HARA = 300;
 
 // ── 状態 ──
-const scores     = {A:'',B:'',C:'',D:''};
+const scores     = {A:'250',B:'250',C:'250',D:'250'};
 const minusFlag  = {A:false,B:false,C:false,D:false};
 const kuriScores = {A:'',B:'',C:'',D:''};
 const kuriMinus  = {A:false,B:false,C:false,D:false};
@@ -670,6 +713,7 @@ function selectShi(p) {
   shiPlayer=p;
   ['A','B','C','D'].forEach(x=>{
     document.getElementById('res-name-'+x).classList.toggle('shi-active',x===p);
+    const r2=document.getElementById('res2-name-'+x); if(r2)r2.classList.toggle('shi-active',x===p);
   });
   calcResult();
 }
@@ -716,11 +760,14 @@ function doAC(){
     ['','kuri-','shi-'].forEach(pre=>{
       const el=document.getElementById('minus-'+pre+p); if(el)el.classList.remove('active');
     });
+    // 持Pを250にリセット
+    scores[p]='250'; minusFlag[p]=false;
     updateDisp(p);updateKuriDisp(p);updateShiDisp(p);
     // 名前をリセット
     names[p]=p;
     const btnEl=document.getElementById('btn-'+p); if(btnEl)btnEl.textContent=p;
     const resEl=document.getElementById('res-name-'+p); if(resEl)resEl.textContent=p;
+    const res2El=document.getElementById('res2-name-'+p); if(res2El)res2El.textContent=p;
   });
   kyoku='';zumi='';
   document.getElementById('disp-kyoku').textContent='＿';
@@ -870,9 +917,86 @@ function calcForPlayer(me) {
   setBox(document.getElementById('rcy-'+me),chokuDiff,true);
 }
 
-function calcResult(){['A','B','C','D'].forEach(p=>calcForPlayer(p));}
+function calcResult(){['A','B','C','D'].forEach(p=>calcForPlayer(p));['A','B','C','D'].forEach(p=>calcForPlayer2(p));}
+
+// ── 2位同点条件 ──
+// 2位のターゲット（2番目に高い総P）を求める
+function findRequiredHoldDelta2(me) {
+  const holdVals={A:getVal('A'),B:getVal('B'),C:getVal('C'),D:getVal('D')};
+  const kuriVals={A:getKuriVal('A')||0,B:getKuriVal('B')||0,C:getKuriVal('C')||0,D:getKuriVal('D')||0};
+  if(holdVals[me]===null)return null;
+
+  const curTotalPs=calcTotalPs(holdVals,kuriVals);
+  const others=['A','B','C','D'].filter(p=>p!==me).filter(p=>curTotalPs[p]!==null);
+  if(others.length<2)return null;
+  if(curTotalPs[me]===null)return null;
+
+  // 他のプレイヤーの総Pを降順ソートして2番目を取得
+  const sortedOthers=[...others].sort((a,b)=>curTotalPs[b]-curTotalPs[a]);
+  const target2P = curTotalPs[sortedOthers[1]]; // 2番目に高い総P
+
+  // 自分がすでに2位以上（target2P以上）ならスキップ
+  if(curTotalPs[me]>=target2P)return 0;
+
+  for(let d=0;d<=10000;d++){
+    const newHoldVals={...holdVals,[me]:holdVals[me]+d};
+    const newTotalPs=calcTotalPs(newHoldVals,kuriVals);
+    // 2位のターゲットも変動する
+    const newSortedOthers=[...others].sort((a,b)=>newTotalPs[b]-newTotalPs[a]);
+    const newTarget2P=newTotalPs[newSortedOthers[1]];
+    if(newTotalPs[me]>=newTarget2P)return d;
+  }
+  return null;
+}
+
+function calcForPlayer2(me) {
+  const holdVals={A:getVal('A'),B:getVal('B'),C:getVal('C'),D:getVal('D')};
+  const kyokuVal=kyoku===''?0:parseInt(kyoku);
+  const zumiVal=zumi===''?0:parseInt(zumi);
+
+  const ids=['r2t1-','r2t2-','r2ty-','r2r-','r2c-','r2cy-'];
+  const clear=()=>ids.forEach(pre=>{const el=document.getElementById(pre+me);if(el){el.textContent='—';el.style.color='';}});
+
+  if(holdVals[me]===null){clear();return;}
+  const requiredDelta=findRequiredHoldDelta2(me);
+  if(requiredDelta===null){clear();return;}
+  if(requiredDelta===0){clear();return;}
+
+  const base=requiredDelta - kyokuVal*10;
+  const ron=base - zumiVal*3;
+  const tsumoBase=base - zumiVal*4;
+
+  let t1,t2,td;
+  if(oyaPlayer===me){
+    t1=ceilDiv(tsumoBase,4);t2='ALL';td=Math.abs(t1*4-tsumoBase);
+  } else {
+    const kuriVals={A:getKuriVal('A')||0,B:getKuriVal('B')||0,C:getKuriVal('C')||0,D:getKuriVal('D')||0};
+    const curTotalPs=calcTotalPs(holdVals,kuriVals);
+    const others=['A','B','C','D'].filter(p=>p!==me).filter(p=>curTotalPs[p]!==null);
+    const sortedOthers=[...others].sort((a,b)=>curTotalPs[b]-curTotalPs[a]);
+    const tp=sortedOthers[1]; // 2番目に高い人
+    if(oyaPlayer===tp){t1=ceilDiv(tsumoBase,6);t2=t1*2;td=Math.abs(t1*6-tsumoBase);}
+    else{t1=ceilDiv(tsumoBase,5);t2=t1*2;td=Math.abs(t1*5-tsumoBase);}
+  }
+
+  const chokuBase=base-zumiVal*6;
+  const choku=ceilDiv(chokuBase,2);
+  const chokuDiff=Math.abs(choku*2-chokuBase);
+
+  setBox(document.getElementById('r2t1-'+me),t1,false);
+  const t2el=document.getElementById('r2t2-'+me);
+  if(t2==='ALL'){t2el.textContent='ALL';t2el.style.color='#f39c12';}
+  else if(t2<0){t2el.textContent='▲'+Math.abs(t2);t2el.style.color='#e74c3c';}
+  else{t2el.textContent=String(t2);t2el.style.color='';}
+  setBox(document.getElementById('r2ty-'+me),td,true);
+  setBox(document.getElementById('r2r-'+me),ron,false);
+  setBox(document.getElementById('r2c-'+me),choku,false);
+  setBox(document.getElementById('r2cy-'+me),chokuDiff,true);
+}
 
 // ── 初期化 ──
+// 初期表示
+['A','B','C','D'].forEach(p=>updateDisp(p));
 updateRptDisplay();
 updateHighlight();
 selectShi('A');
