@@ -182,7 +182,7 @@
 
   <!-- P差行 -->
   <div class="row">
-    <span class="row-label">P差</span>
+    <span class="row-label">1P差</span>
     <div class="disp-box" id="pdiff-A">—</div>
     <div class="disp-box" id="pdiff-B">—</div>
     <div class="disp-box" id="pdiff-C">—</div>
@@ -191,6 +191,16 @@
       <span style="font-size:11px;color:#ffffff;">積</span>
       <div class="kyoku-display" id="disp-zumi" onclick="selectInput('zumi')">＿</div>
     </div>
+  </div>
+
+  <!-- 2P差行 -->
+  <div class="row">
+    <span class="row-label">2P差</span>
+    <div class="disp-box" id="pdiff2-A">—</div>
+    <div class="disp-box" id="pdiff2-B">—</div>
+    <div class="disp-box" id="pdiff2-C">—</div>
+    <div class="disp-box" id="pdiff2-D">—</div>
+    <div style="width:44px;flex-shrink:0;"></div>
   </div>
 
   <!-- 親子 + ACボタン -->
@@ -640,15 +650,34 @@ function calcAll() {
 
   // 順位表示
   const topP = Math.max(...Object.values(totalPs).filter(v=>v!==null).concat([-Infinity]));
+  // 2位の総P
+  const validTotalPs = Object.values(totalPs).filter(v=>v!==null).sort((a,b)=>b-a);
+  const top2P = validTotalPs.length >= 2 ? validTotalPs[1] : null;
+
   ['A','B','C','D'].forEach(p=>{
     const rankEl=document.getElementById('rank-'+p);
     const pdiffEl=document.getElementById('pdiff-'+p);
-    if(totalPs[p]===null){rankEl.textContent='—';rankEl.style.color='';pdiffEl.textContent='—';pdiffEl.style.color='';return;}
+    const pdiff2El=document.getElementById('pdiff2-'+p);
+    if(totalPs[p]===null){
+      rankEl.textContent='—';rankEl.style.color='';
+      pdiffEl.textContent='—';pdiffEl.style.color='';
+      if(pdiff2El){pdiff2El.textContent='—';pdiff2El.style.color='';}
+      return;
+    }
     const r=totalRanks[p];
     rankEl.textContent=r+'位'; rankEl.style.color=r===1?'#f39c12':'';
     const diff=Math.round(topP-totalPs[p]);
     pdiffEl.textContent=String(diff);
     pdiffEl.style.color=diff===0?'#f39c12':'#e0e0e0';
+    // 2P差
+    if(pdiff2El){
+      if(top2P===null){pdiff2El.textContent='—';pdiff2El.style.color='';}
+      else{
+        const diff2=Math.round(top2P-totalPs[p]);
+        pdiff2El.textContent=String(diff2);
+        pdiff2El.style.color=diff2===0?'#f39c12':'#e0e0e0';
+      }
+    }
   });
 
   calcResult();
