@@ -611,6 +611,8 @@ function loadState() {
           if (btn) btn.textContent = s.names[p];
           const res = document.getElementById('res-name-'+p);
           if (res) res.textContent = s.names[p];
+          const res2 = document.getElementById('res2-name-'+p);
+          if (res2) res2.textContent = s.names[p];
         }
       });
     }
@@ -1026,7 +1028,12 @@ function calcForPlayer2(me) {
 
 // ── 初期化 ──
 // 初期表示
-['A','B','C','D'].forEach(p=>updateDisp(p));
+['A','B','C','D'].forEach(p=>{
+  updateDisp(p);
+  const r1=document.getElementById('res-name-'+p); if(r1)r1.textContent=names[p];
+  const r2=document.getElementById('res2-name-'+p); if(r2)r2.textContent=names[p];
+  const bn=document.getElementById('btn-'+p); if(bn)bn.textContent=names[p];
+});
 updateRptDisplay();
 updateHighlight();
 selectShi('A');
