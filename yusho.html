@@ -773,9 +773,13 @@ function startLongPress(p) {
       if(btnEl) btnEl.textContent=label;
       // 視点ボタン
 
-      // 結果行
+      // 結果行（1位エリア）
       const resEl=document.getElementById('res-name-'+p);
       if(resEl) resEl.textContent=label;
+      // 結果行（2位エリア）
+      const res2El=document.getElementById('res2-name-'+p);
+      if(res2El) res2El.textContent=label;
+      saveState();
     }
   },600);
 }
